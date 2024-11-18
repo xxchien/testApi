@@ -1,0 +1,5 @@
+#run.log
+*.log
+
+#output
+output
