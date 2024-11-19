@@ -1,9 +1,8 @@
 import json
+import os
 # import ymal
 import sys
-import time
 from configparser import ConfigParser
-from datetime import datetime, timedelta
 
 
 class MyConfigParser(ConfigParser):
@@ -41,7 +40,7 @@ class ReadFileData:
             log.info("加载 {} 文件......".format(file_path))
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            log.info("读到数据 ==>>  {} ".format(data))
+            # log.info("读到数据 ==>>  {} ".format(data))
             return data
         except FileNotFoundError as e:
             log.error(f"{sys.argv[0]}-配置文件未找到: {e}")
@@ -67,62 +66,41 @@ class ReadFileData:
             raise
 
 
-def get_timestamp():
-    """
-    获取当前时间戳
-    :return: 时间戳字符串
-    """
-    return str(int(time.time() * 1000))
+class SaveFile:
+    def __init__(self):
+        pass
 
+    def save_json_to_file(self, data_json, file_path: str):
+        """
+        将 JSON 数据保存到指定文件中。如果 data_json 已经是 JSON 字符串，则直接保存。
+        :param data_json: 需要保存的 JSON 数据，支持字典、列表或已处理的 JSON 字符串
+        :param file_path: 保存文件的完整路径
+        """
+        # 确保文件夹存在
+        folder_path = os.path.dirname(file_path)
+        os.makedirs(folder_path, exist_ok=True)
 
-def get_current_date(**kwargs):
-    """
-    获取当前日期
-    :return: 当前日期格式，默认格式为%Y-%m-%d
-    """
-    format_data = kwargs.get('format', '%Y-%m-%d')
-    # 获取当前日期
-    current_date = datetime.now()
-    formatted_date = current_date.strftime(format_data)
+        # 判断 data_json 是否是字符串类型
+        if isinstance(data_json, str):
+            json_string = data_json  # 如果是字符串，直接使用
+        else:
+            import json
+            json_string = json.dumps(data_json, ensure_ascii=False, indent=4)  # 如果是对象，先转换为字符串
 
-    return formatted_date
+        # 写入文件，覆盖已有内容
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(json_string)
 
+    def save_to_file(self, data_json, file_path: str):
+        """
+        将 JSON 数据保存到指定文件中
+        :param data_json: 需要保存的 JSON 数据
+        :param file_path: 保存文件的完整路径
+        """
+        # 确保文件夹存在
+        folder_path = os.path.dirname(file_path)
+        os.makedirs(folder_path, exist_ok=True)
 
-def calculate_date(**kwargs):
-    """
-        计算从当前日期起，向前或向后推移指定天数后的日期，并根据格式进行格式化。
-    :param kwargs: days向前或向后推移的天数（负数表示向前，正数表示向后） format_data日期格式，默认为 'YYYY-MM-DD'
-    :return:  格式化后的日期字符串
-    """
-    days = kwargs.get('days', 0)
-    format_data = kwargs.get('format', '%Y-%m-%d')
-    start_data = kwargs.get('start_data', datetime.now())
-    target_date = start_data + timedelta(days=days)
-    formatted_date = target_date.strftime(format_data)
-
-    return formatted_date
-
-
-def find_all_results(data, key):
-    """
-    递归函数来遍历字典中的所有键
-    :param data: 被查找对象
-    :param key: 键
-    :return:输出值列表
-    """
-    results = []
-
-    # 如果当前对象是字典
-    if isinstance(data, dict):
-        for k, v in data.items():
-            if k == key:
-                results.append(v)  # 如果找到目标键，则将值添加到列表中
-            else:
-                results.extend(find_all_results(v, key))  # 递归搜索嵌套字典或列表
-
-    # 如果当前对象是列表
-    elif isinstance(data, (list, tuple)):
-        for item in data:
-            results.extend(find_all_results(item, key))  # 递归搜索嵌套字典或列表
-
-    return results
+        # 写入文件，覆盖已有内容
+        with open(file_path, "w", encoding="utf-8") as file:
+            json.dump(data_json, file, ensure_ascii=False, indent=4)

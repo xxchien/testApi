@@ -1,0 +1,11 @@
+{
+  "module": "usercenter",
+  "basePath": "/api/usercenter",
+  "case": [
+    {
+      "name": "test_case01",
+      "username": "testOp01",
+      "password": "c50d98c79dbdb8049ab1571444771e68"
+    }
+  ]
+}

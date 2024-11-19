@@ -1,7 +1,6 @@
 import logging  # 导入 Python 内置的日志模块
 import sys  # 导入与系统交互的模块
 from functools import wraps  # 导入 wraps 函数，用于保留被装饰函数的元数据
-from common.tools import find_all_results
 
 
 # TODO: 使用aspectlib，Aspect-Oriented Programming (AOP)，来改造。
@@ -110,88 +109,6 @@ def _log_decorator(*args, **kwargs):
     return decorator  # 返回装饰器函数
 
 
-def _log_code_decorator(*args, **kwargs):
-    """
-    用于判定返回code是否复合预期，不能用于返回没有result中
-    可以接受被修饰函数返回结果类型为dict
-    :param args:
-    :param kwargs:
-    :return:
-    """
-    expected_key = kwargs.get('expected_key', "code")  # 默认期望判断的键为"code"
-    expected_value = kwargs.get('expected_value', 200)  # 默认期望判断的值为200
-    name_log_var = kwargs.get('name_log_var', None)
-    success_log_var = kwargs.get('success_log_var', None)
-    error_log_var = kwargs.get('error_log_var', None)
-
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            class_name = args[0].__class__.__name__ if args else None  # 获取调用方法所在的类名
-            method_name = func.__name__  # 获取方法名
-            where_log = f"{class_name}.{method_name}"
-            # 构建日志信息
-            start_message = f"{class_name}.{method_name} - Start：{' ' + str(name_log_var) if name_log_var else ''}"
-            _get_logger().info(start_message)  # 记录方法开始的日志
-
-            # 兼容数据格式dict\tuple\list
-            try:
-                result = func(*args, **kwargs)  # 执行被装饰的函数
-                # 判断返回值的类型并获取预期值,dict\tuple\list
-                if isinstance(result, (dict, tuple, list)):
-                    actual_value_list = find_all_results(result, expected_key)
-                else:
-                    actual_value_list = []
-
-                if actual_value_list:
-                    actual_value = actual_value_list[0]
-                else:
-                    actual_value = None
-
-                # 检查返回值中的 code 字段
-                if actual_value == expected_value:
-
-                    # 构建成功日志信息
-                    if success_log_var:
-                        success_value = f"{locals().get('success_log_var')} - {str(result) if result is not None else 'result is None'}"
-                    elif name_log_var:
-                        success_value = f"{name_log_var} - {str(result) if result is not None else 'result is None'}"
-                    else:
-                        success_value = str(result) if result is not None else ''
-
-                    success_message = f"{class_name}.{method_name} - Success: {success_value}"
-                    _get_logger().info(success_message)  # 记录成功日志
-
-                else:
-                    # 构建错误日志信息
-                    if error_log_var is None:
-                        error_value = f"{str(result) if result else ''}"
-                    if name_log_var:
-                        error_value = f"{name_log_var} - {str(result) if result is not None else 'result is None'}"
-                    else:
-                        error_value = f"{locals().get('error_log_var')} - {str(result) if result is not None else 'result is None'}"
-                    error_message = f"{class_name}.{method_name} - Failed: {error_value}"
-                    _get_logger().error(error_message)  # 记录错误日志
-
-                return result
-
-            except Exception as e:
-                # 处理函数执行期间的异常并记录错误日志
-                if error_log_var is None:
-                    error_value = str(e)
-                if name_log_var:
-                    error_value = f"{name_log_var}{' - ' + str(e) if str(e) is not None else ''}"
-                else:
-                    error_value = f"{locals().get('error_log_var')}{' - ' + str(e) if str(e) is not None else ''}"
-                error_message = f"{class_name}.{method_name} - Failed: {error_value}"
-                _get_logger().error(error_message)
-                raise e  # 重新引发异常，或者根据需要处理
-
-        return wrapper
-
-    return decorator
-
-
 class LogMeta(type):
     def __new__(cls, name, bases, dct):
         for attr_name, attr_value in dct.items():
@@ -227,8 +144,6 @@ def log_with(**log_args):
 
 # 创建并配置全局日志记录器实例，可以在整个应用程序中使用,是个装饰器
 log_dec = _log_decorator
-# 创建并配置全局日志记录器实例，可以在整个应用程序中使用,是个装饰器
-log_code_dec = _log_code_decorator
 # 创建并配置全局日志记录器实例，可以在整个应用程序中使用，函数供单独使用
 log = _get_logger()
 

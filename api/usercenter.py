@@ -1,5 +1,5 @@
 from core import RequestClient
-from config import api_host
+from config import *
 
 
 class Usercenter(RequestClient):
@@ -7,10 +7,9 @@ class Usercenter(RequestClient):
         super(Usercenter, self).__init__(api_host)
         self.base_path = "/api/homework"
         self.session.headers = {
-            "Host": self.api_host,
-            "XC-App-User-SchoolId": '6',
-            "AuthToken": f"d416f111-1690-49f0-843a-6c6a5d866359"
+            "Host": api_host
         }
+        self.session.headers.update(base_headers)
 
     def get_school_courses(self, **kwargs):
         path = "/api/usercenter/common/school/course/list"
